@@ -179,18 +179,39 @@ public class AlarmClockActivity extends AppCompatActivity {
         cdt.start();
     }
 
+    private boolean isBetweenTimes(int start, int end, int time) {
+        if (end >= start) {
+            return time >= start && time < end;
+        } else {
+            return time >= start || time < end;
+        }
+    }
+
+    private int degreesBetweenTimes(int start, int end, int time) {
+        if (start > end) {
+            end += 24 * 3600;
+        }
+        return (int) (360.0 * (double) (time - start) / (double) (end - start));
+    }
+
     private void updateClock() {
         Calendar cal = Calendar.getInstance();
         int minute = cal.get(Calendar.MINUTE);
         //24 hour format
         int hourofday = cal.get(Calendar.HOUR_OF_DAY);
         int time = hourofday * 3600 + minute * 60;
-        boolean okToWake = false;
-        if (sleep >= wake) {
-            // Normal case.
-            okToWake = time >= wake && time < sleep;
-        } else {
-            okToWake = time >= wake || time < sleep;
+        boolean okToWake = isBetweenTimes(wake, sleep, time);
+
+        int strokeDegrees = 0;
+        boolean isWakeWarning = isBetweenTimes(wakeWarning, wake, time);
+        boolean isSleepWarning = isBetweenTimes(sleepWarning, sleep, time);
+
+        if (isWakeWarning) {
+            strokeDegrees = degreesBetweenTimes(wakeWarning, wake, time);
+        }
+
+        if (isSleepWarning) {
+            strokeDegrees = degreesBetweenTimes(sleepWarning, sleep, time);;
         }
 
         if (okToWake) {
@@ -200,6 +221,7 @@ public class AlarmClockActivity extends AppCompatActivity {
             shapeView.setCircleColor(0xFFBA0B0B);
             shapeView.setLabelColor(0xFF690000);
         }
+        shapeView.setStrokeDegrees(strokeDegrees);
         SimpleDateFormat sdf = new SimpleDateFormat("h:mma");
         shapeView.setLabelText(sdf.format(cal.getTime()));
     }

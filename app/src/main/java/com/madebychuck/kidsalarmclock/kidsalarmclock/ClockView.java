@@ -16,8 +16,10 @@ import android.view.View;
 public class ClockView extends View {
     private int circleCol, labelCol;
     private Paint circlePaint;
+    private Paint strokePaint;
     private String circleText;
     private Drawable mExampleDrawable;
+    private int strokeDegrees;
 
     public ClockView(Context context) {
         super(context);
@@ -35,7 +37,12 @@ public class ClockView extends View {
     }
 
     private void init(AttributeSet attrs, int defStyle) {
+        strokeDegrees = 90;
         circlePaint = new Paint();
+        strokePaint = new Paint();
+        strokePaint.setStyle(Paint.Style.FILL);
+        strokePaint.setAntiAlias(true);
+        strokePaint.setColor(0xFFFFFF00);
         // Load attributes
         final TypedArray a = getContext().obtainStyledAttributes(
                 attrs, R.styleable.ClockView, defStyle, 0);
@@ -56,6 +63,14 @@ public class ClockView extends View {
     }
 
     private void invalidateTextPaintAndMeasurements() {
+    }
+
+    public int getStrokeDegrees() { return strokeDegrees; }
+
+    public void setStrokeDegrees(int newStrokeDegrees) {
+        strokeDegrees = newStrokeDegrees;
+        invalidate();
+        requestLayout();
     }
 
     public int getCircleColor(){
@@ -104,11 +119,20 @@ public class ClockView extends View {
         //get the radius as half of the width or height, whichever is smaller
         //subtract ten so that it has some space around it
         int radius = 0;
-        if(viewWidthHalf>viewHeightHalf)
-            radius=viewHeightHalf-10;
-        else
-            radius=viewWidthHalf-10;
-
+        if(viewWidthHalf>viewHeightHalf) {
+            radius = viewHeightHalf - 30;
+        } else {
+            radius = viewWidthHalf - 30;
+        }
+        int arcRadius = radius + 20;
+        canvas.drawArc(viewWidthHalf - arcRadius,
+                viewHeightHalf - arcRadius,
+                viewWidthHalf + arcRadius,
+                viewHeightHalf + arcRadius,
+                270,
+                strokeDegrees,
+                true,
+                strokePaint);
         //set drawing properties
         circlePaint.setStyle(Paint.Style.FILL);
         circlePaint.setAntiAlias(true);
@@ -121,9 +145,11 @@ public class ClockView extends View {
         circlePaint.setColor(labelCol);
         //set text properties
         circlePaint.setTextAlign(Paint.Align.CENTER);
-        circlePaint.setTextSize(180);
+        circlePaint.setTextSize(160);
         //draw the text using the string attribute and chosen properties
         canvas.drawText(circleText, viewWidthHalf, viewHeightHalf + 70, circlePaint);
+
+
     }
 
     /**
