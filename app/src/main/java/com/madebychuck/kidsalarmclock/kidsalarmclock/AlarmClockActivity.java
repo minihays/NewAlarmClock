@@ -1,8 +1,12 @@
 package com.madebychuck.kidsalarmclock.kidsalarmclock;
 
 import android.annotation.SuppressLint;
+
+import android.content.Intent;
 import android.graphics.Color;
+import android.media.audiofx.BassBoost;
 import android.os.CountDownTimer;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -10,6 +14,7 @@ import android.os.Handler;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.Button;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -113,7 +118,14 @@ public class AlarmClockActivity extends AppCompatActivity {
         // Upon interacting with UI controls, delay any scheduled hide()
         // operations to prevent the jarring behavior of controls going away
         // while interacting with the UI.
-        findViewById(R.id.dummy_button).setOnTouchListener(mDelayHideTouchListener);
+        //findViewById(R.id.dummy_button).setOnTouchListener(mDelayHideTouchListener);
+
+        Button button = (Button) findViewById(R.id.dummy_button);
+        button.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                openSettings(v);
+            }
+        });
 
         shapeView = (ClockView)findViewById(R.id.fullscreen_content);
         shapeView.setCircleColor(Color.BLUE);
@@ -210,5 +222,13 @@ public class AlarmClockActivity extends AppCompatActivity {
     private void delayedHide(int delayMillis) {
         mHideHandler.removeCallbacks(mHideRunnable);
         mHideHandler.postDelayed(mHideRunnable, delayMillis);
+    }
+
+    public void openSettings(View view) {
+        TimePickerFragment newFragment = new TimePickerFragment();
+        FragmentManager fm = getSupportFragmentManager();
+        newFragment.show(fm, "timepicker");
+        //Intent intent = new Intent(this, SettingsActivity.class);
+        //startActivity(intent);
     }
 }
