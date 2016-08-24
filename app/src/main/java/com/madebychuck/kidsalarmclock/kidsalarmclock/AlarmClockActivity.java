@@ -2,7 +2,9 @@ package com.madebychuck.kidsalarmclock.kidsalarmclock;
 
 import android.annotation.SuppressLint;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.media.audiofx.BassBoost;
 import android.os.CountDownTimer;
@@ -79,6 +81,9 @@ public class AlarmClockActivity extends AppCompatActivity {
             hide();
         }
     };
+    private int wake;
+    private int sleep;
+
     /**
      * Touch listener to use for in-layout UI controls to delay hiding the
      * system UI. This is to prevent the jarring behavior of controls going away
@@ -105,8 +110,7 @@ public class AlarmClockActivity extends AppCompatActivity {
         mVisible = true;
         mControlsView = findViewById(R.id.fullscreen_content_controls);
         mContentView = findViewById(R.id.fullscreen_content);
-
-
+        
         // Set up the user interaction to manually show or hide the system UI.
         mContentView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -120,10 +124,17 @@ public class AlarmClockActivity extends AppCompatActivity {
         // while interacting with the UI.
         //findViewById(R.id.dummy_button).setOnTouchListener(mDelayHideTouchListener);
 
-        Button button = (Button) findViewById(R.id.dummy_button);
-        button.setOnClickListener(new View.OnClickListener() {
+        Button wake = (Button) findViewById(R.id.wake_button);
+        wake.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                openSettings(v);
+                openWake(v);
+            }
+        });
+
+        Button sleep = (Button) findViewById(R.id.sleep_button);
+        sleep.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                openSleep(v);
             }
         });
 
@@ -135,32 +146,7 @@ public class AlarmClockActivity extends AppCompatActivity {
         CountDownTimer cdt = new CountDownTimer(Long.MAX_VALUE, 15000) {
             @Override
             public void onTick(long millisUntilFinished) {
-                Calendar cal = Calendar.getInstance();
-                int minute = cal.get(Calendar.MINUTE);
-                //24 hour format
-                int hourofday = cal.get(Calendar.HOUR_OF_DAY);
-                boolean ok = false;
-
-                if (hourofday < 6 || hourofday >= 19) {
-                    // Before 6 am or after 7 pm
-                    ok = false;
-
-                } else if (hourofday == 6 && minute < 45) {
-                    // Between 6 am and 6:44
-                    ok = false;
-                } else {
-                    ok = true;
-                }
-
-                if (ok) {
-                    shapeView.setCircleColor(0xFF01BC01);
-                    shapeView.setLabelColor(0xFF005400);
-                } else {
-                    shapeView.setCircleColor(0xFFBA0B0B);
-                    shapeView.setLabelColor(0xFF690000);
-                }
-                SimpleDateFormat sdf = new SimpleDateFormat("h:mma");
-                shapeView.setLabelText(sdf.format(cal.getTime()));
+                updateClock();
             }
 
             @Override
@@ -169,6 +155,31 @@ public class AlarmClockActivity extends AppCompatActivity {
             }
         };
         cdt.start();
+    }
+
+    private void updateClock() {
+        Calendar cal = Calendar.getInstance();
+        int minute = cal.get(Calendar.MINUTE);
+        //24 hour format
+        int hourofday = cal.get(Calendar.HOUR_OF_DAY);
+        int time = hourofday * 3600 + minute * 60;
+        boolean okToWake = false;
+        if (sleep >= wake) {
+            // Normal case.
+            okToWake = time >= wake && time <= sleep;
+        } else {
+            okToWake = time >= wake || time <= sleep;
+        }
+
+        if (okToWake) {
+            shapeView.setCircleColor(0xFF01BC01);
+            shapeView.setLabelColor(0xFF005400);
+        } else {
+            shapeView.setCircleColor(0xFFBA0B0B);
+            shapeView.setLabelColor(0xFF690000);
+        }
+        SimpleDateFormat sdf = new SimpleDateFormat("h:mma");
+        shapeView.setLabelText(sdf.format(cal.getTime()));
     }
 
     @Override
@@ -224,11 +235,61 @@ public class AlarmClockActivity extends AppCompatActivity {
         mHideHandler.postDelayed(mHideRunnable, delayMillis);
     }
 
-    public void openSettings(View view) {
-        TimePickerFragment newFragment = new TimePickerFragment();
+    private void openWake(View v) {
+        final SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
+        int wakeHour = sharedPref.getInt("wakeHour", 7);
+        int wakeMin = sharedPref.getInt("wakeMin", 45);
+        TimePickerFragment wakeFragment = new TimePickerFragment();
+        Bundle args = new Bundle();
+        args.putInt("hour", wakeHour);
+        args.putInt("min", wakeMin);
+        wakeFragment.setArguments(args);
+        wakeFragment.events = new TimePickerFragment.TimePickerEvents() {
+            @Override
+            public void onTimeSet(int hourOfDay, int minute) {
+                SharedPreferences.Editor e = sharedPref.edit();
+                e.putInt("wakeHour", hourOfDay);
+                e.putInt("wakeMin", minute);
+                e.commit();
+                updateTimes();
+            }
+        };
+
         FragmentManager fm = getSupportFragmentManager();
-        newFragment.show(fm, "timepicker");
-        //Intent intent = new Intent(this, SettingsActivity.class);
-        //startActivity(intent);
+        wakeFragment.show(fm, "wakePicker");
+    }
+
+    private void openSleep(View v) {
+        final SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
+        int sleepHour = sharedPref.getInt("sleepHour", 20);
+        int sleepMin = sharedPref.getInt("sleepMin", 0);
+        TimePickerFragment sleepFragment = new TimePickerFragment();
+        Bundle args = new Bundle();
+        args.putInt("hour", sleepHour);
+        args.putInt("min", sleepMin);
+        sleepFragment.setArguments(args);
+        sleepFragment.events = new TimePickerFragment.TimePickerEvents() {
+            @Override
+            public void onTimeSet(int hourOfDay, int minute) {
+                SharedPreferences.Editor e = sharedPref.edit();
+                e.putInt("sleepHour", hourOfDay);
+                e.putInt("sleepMin", minute);
+                e.commit();
+                updateTimes();
+            }
+        };
+
+        FragmentManager fm = getSupportFragmentManager();
+        sleepFragment.show(fm, "sleepPicker");
+    }
+
+    private void updateTimes() {
+        final SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
+        int sleepHour = sharedPref.getInt("sleepHour", 7);
+        int sleepMin = sharedPref.getInt("sleepMin", 45);
+        int wakeHour = sharedPref.getInt("wakeHour", 20);
+        int wakeMin = sharedPref.getInt("wakeMin", 0);
+        sleep = sleepHour * 3600 + sleepMin * 60;
+        wake = wakeHour * 3600 + wakeMin * 60;
     }
 }

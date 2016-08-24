@@ -1,7 +1,8 @@
 <resources>
     <string name="app_name">Kids Alarm Clock</string>
 
-    <string name="dummy_button">Settings</string>
+    <string name="wake_button">Wake</string>
+    <string name="sleep_button">Sleep</string>
     <string name="title_activity_settings">Settings</string>
 
     <!-- Strings related to Settings -->
