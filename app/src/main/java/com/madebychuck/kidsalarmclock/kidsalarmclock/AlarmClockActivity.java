@@ -17,9 +17,14 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.TextClock;
+import android.widget.TextView;
+
+import org.w3c.dom.Text;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
@@ -100,6 +105,8 @@ public class AlarmClockActivity extends AppCompatActivity {
     };
 
     private ClockView shapeView;
+    private Button wakeButton;
+    private Button sleepButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -110,7 +117,7 @@ public class AlarmClockActivity extends AppCompatActivity {
         mVisible = true;
         mControlsView = findViewById(R.id.fullscreen_content_controls);
         mContentView = findViewById(R.id.fullscreen_content);
-        
+
         // Set up the user interaction to manually show or hide the system UI.
         mContentView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -119,20 +126,15 @@ public class AlarmClockActivity extends AppCompatActivity {
             }
         });
 
-        // Upon interacting with UI controls, delay any scheduled hide()
-        // operations to prevent the jarring behavior of controls going away
-        // while interacting with the UI.
-        //findViewById(R.id.dummy_button).setOnTouchListener(mDelayHideTouchListener);
-
-        Button wake = (Button) findViewById(R.id.wake_button);
-        wake.setOnClickListener(new View.OnClickListener() {
+        wakeButton = (Button) findViewById(R.id.wake_button);
+        wakeButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 openWake(v);
             }
         });
 
-        Button sleep = (Button) findViewById(R.id.sleep_button);
-        sleep.setOnClickListener(new View.OnClickListener() {
+        sleepButton = (Button) findViewById(R.id.sleep_button);
+        sleepButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 openSleep(v);
             }
@@ -140,6 +142,8 @@ public class AlarmClockActivity extends AppCompatActivity {
 
         shapeView = (ClockView)findViewById(R.id.fullscreen_content);
         shapeView.setCircleColor(Color.BLUE);
+
+        updateTimes();
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
@@ -166,9 +170,9 @@ public class AlarmClockActivity extends AppCompatActivity {
         boolean okToWake = false;
         if (sleep >= wake) {
             // Normal case.
-            okToWake = time >= wake && time <= sleep;
+            okToWake = time >= wake && time < sleep;
         } else {
-            okToWake = time >= wake || time <= sleep;
+            okToWake = time >= wake || time < sleep;
         }
 
         if (okToWake) {
@@ -291,5 +295,14 @@ public class AlarmClockActivity extends AppCompatActivity {
         int wakeMin = sharedPref.getInt("wakeMin", 0);
         sleep = sleepHour * 3600 + sleepMin * 60;
         wake = wakeHour * 3600 + wakeMin * 60;
+        SimpleDateFormat sdf = new SimpleDateFormat("h:mma");
+        Calendar cal = Calendar.getInstance();
+        cal.set(Calendar.HOUR_OF_DAY, wakeHour);
+        cal.set(Calendar.MINUTE, wakeMin);
+        wakeButton.setText("Wake (" + sdf.format(cal.getTime()) + ")");
+        Calendar cal2 = Calendar.getInstance();
+        cal2.set(Calendar.HOUR_OF_DAY, sleepHour);
+        cal2.set(Calendar.MINUTE, sleepMin);
+        sleepButton.setText("Sleep (" + sdf.format(cal2.getTime()) + ")");
     }
 }
