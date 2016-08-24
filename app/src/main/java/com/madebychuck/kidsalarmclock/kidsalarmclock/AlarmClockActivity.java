@@ -88,6 +88,8 @@ public class AlarmClockActivity extends AppCompatActivity {
     };
     private int wake;
     private int sleep;
+    private int wakeWarning;
+    private int sleepWarning;
 
     /**
      * Touch listener to use for in-layout UI controls to delay hiding the
@@ -107,6 +109,8 @@ public class AlarmClockActivity extends AppCompatActivity {
     private ClockView shapeView;
     private Button wakeButton;
     private Button sleepButton;
+    private Button wakeWarningButton;
+    private Button sleepWarningButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -126,10 +130,24 @@ public class AlarmClockActivity extends AppCompatActivity {
             }
         });
 
+        wakeWarningButton = (Button) findViewById(R.id.wake_warning_button);
+        wakeWarningButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                openWakeWarning(v);
+            }
+        });
+
         wakeButton = (Button) findViewById(R.id.wake_button);
         wakeButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 openWake(v);
+            }
+        });
+
+        sleepWarningButton = (Button) findViewById(R.id.sleep_warning_button);
+        sleepWarningButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                openSleepWarning(v);
             }
         });
 
@@ -239,6 +257,30 @@ public class AlarmClockActivity extends AppCompatActivity {
         mHideHandler.postDelayed(mHideRunnable, delayMillis);
     }
 
+    private void openWakeWarning(View v) {
+        final SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
+        int wakeHour = sharedPref.getInt("wakeWarningHour", 7);
+        int wakeMin = sharedPref.getInt("wakeWarningMin", 30);
+        TimePickerFragment wakeFragment = new TimePickerFragment();
+        Bundle args = new Bundle();
+        args.putInt("hour", wakeHour);
+        args.putInt("min", wakeMin);
+        wakeFragment.setArguments(args);
+        wakeFragment.events = new TimePickerFragment.TimePickerEvents() {
+            @Override
+            public void onTimeSet(int hourOfDay, int minute) {
+                SharedPreferences.Editor e = sharedPref.edit();
+                e.putInt("wakeWarningHour", hourOfDay);
+                e.putInt("wakeWarningMin", minute);
+                e.commit();
+                updateTimes();
+            }
+        };
+
+        FragmentManager fm = getSupportFragmentManager();
+        wakeFragment.show(fm, "wakePicker");
+    }
+
     private void openWake(View v) {
         final SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
         int wakeHour = sharedPref.getInt("wakeHour", 7);
@@ -261,6 +303,30 @@ public class AlarmClockActivity extends AppCompatActivity {
 
         FragmentManager fm = getSupportFragmentManager();
         wakeFragment.show(fm, "wakePicker");
+    }
+
+    private void openSleepWarning(View v) {
+        final SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
+        int sleepHour = sharedPref.getInt("sleepWarningHour", 19);
+        int sleepMin = sharedPref.getInt("sleepWarningMin", 45);
+        TimePickerFragment sleepFragment = new TimePickerFragment();
+        Bundle args = new Bundle();
+        args.putInt("hour", sleepHour);
+        args.putInt("min", sleepMin);
+        sleepFragment.setArguments(args);
+        sleepFragment.events = new TimePickerFragment.TimePickerEvents() {
+            @Override
+            public void onTimeSet(int hourOfDay, int minute) {
+                SharedPreferences.Editor e = sharedPref.edit();
+                e.putInt("sleepWarningHour", hourOfDay);
+                e.putInt("sleepWarningMin", minute);
+                e.commit();
+                updateTimes();
+            }
+        };
+
+        FragmentManager fm = getSupportFragmentManager();
+        sleepFragment.show(fm, "sleepPicker");
     }
 
     private void openSleep(View v) {
@@ -289,20 +355,34 @@ public class AlarmClockActivity extends AppCompatActivity {
 
     private void updateTimes() {
         final SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
-        int sleepHour = sharedPref.getInt("sleepHour", 7);
-        int sleepMin = sharedPref.getInt("sleepMin", 45);
-        int wakeHour = sharedPref.getInt("wakeHour", 20);
-        int wakeMin = sharedPref.getInt("wakeMin", 0);
+        int sleepHour = sharedPref.getInt("sleepHour", 20);
+        int sleepMin = sharedPref.getInt("sleepMin", 0);
+        int wakeHour = sharedPref.getInt("wakeHour", 7);
+        int wakeMin = sharedPref.getInt("wakeMin", 45);
+        int sleepWarningHour = sharedPref.getInt("sleepWarningHour", 19);
+        int sleepWarningMin = sharedPref.getInt("sleepWarningMin", 45);
+        int wakeWarningHour = sharedPref.getInt("wakeWarningHour", 7);
+        int wakeWarningMin = sharedPref.getInt("wakeWarningMin", 30);
         sleep = sleepHour * 3600 + sleepMin * 60;
         wake = wakeHour * 3600 + wakeMin * 60;
+        sleepWarning = sleepWarningHour * 3600 + sleepWarningMin * 60;
+        wakeWarning = wakeWarningHour * 3600 + wakeWarningMin * 60;
         SimpleDateFormat sdf = new SimpleDateFormat("h:mma");
         Calendar cal = Calendar.getInstance();
         cal.set(Calendar.HOUR_OF_DAY, wakeHour);
         cal.set(Calendar.MINUTE, wakeMin);
         wakeButton.setText("Wake (" + sdf.format(cal.getTime()) + ")");
-        Calendar cal2 = Calendar.getInstance();
-        cal2.set(Calendar.HOUR_OF_DAY, sleepHour);
-        cal2.set(Calendar.MINUTE, sleepMin);
-        sleepButton.setText("Sleep (" + sdf.format(cal2.getTime()) + ")");
+        cal = Calendar.getInstance();
+        cal.set(Calendar.HOUR_OF_DAY, sleepHour);
+        cal.set(Calendar.MINUTE, sleepMin);
+        sleepButton.setText("Sleep (" + sdf.format(cal.getTime()) + ")");
+        cal = Calendar.getInstance();
+        cal.set(Calendar.HOUR_OF_DAY, sleepWarningHour);
+        cal.set(Calendar.MINUTE, sleepWarningMin);
+        sleepWarningButton.setText("Sleep warning (" + sdf.format(cal.getTime()) + ")");
+        cal = Calendar.getInstance();
+        cal.set(Calendar.HOUR_OF_DAY, wakeWarningHour);
+        cal.set(Calendar.MINUTE, wakeWarningMin);
+        wakeWarningButton.setText("Wake warning (" + sdf.format(cal.getTime()) + ")");
     }
 }

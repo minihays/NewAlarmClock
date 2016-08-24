@@ -30,6 +30,13 @@
             android:background="@color/black_overlay"
             android:orientation="horizontal"
             tools:ignore="UselessParent">
+            <Button
+                android:id="@+id/wake_warning_button"
+                style="?metaButtonBarButtonStyle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/wake_button" />
 
             <Button
                 android:id="@+id/wake_button"
@@ -38,6 +45,13 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="@string/wake_button" />
+            <Button
+                android:id="@+id/sleep_warning_button"
+                style="?metaButtonBarButtonStyle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/sleep_button" />
             <Button
                 android:id="@+id/sleep_button"
                 style="?metaButtonBarButtonStyle"
