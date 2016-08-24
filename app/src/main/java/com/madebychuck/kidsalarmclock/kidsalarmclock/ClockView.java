@@ -14,14 +14,10 @@ import android.view.View;
  * TODO: document your custom view class.
  */
 public class ClockView extends View {
-    private String mExampleString; // TODO: use a default from R.string...
-    private int mExampleColor = Color.RED; // TODO: use a default from R.color...
-    private float mExampleDimension = 0; // TODO: use a default from R.dimen...
+    private int circleCol, labelCol;
+    private Paint circlePaint;
+    private String circleText;
     private Drawable mExampleDrawable;
-
-    private TextPaint mTextPaint;
-    private float mTextWidth;
-    private float mTextHeight;
 
     public ClockView(Context context) {
         super(context);
@@ -39,20 +35,13 @@ public class ClockView extends View {
     }
 
     private void init(AttributeSet attrs, int defStyle) {
+        circlePaint = new Paint();
         // Load attributes
         final TypedArray a = getContext().obtainStyledAttributes(
                 attrs, R.styleable.ClockView, defStyle, 0);
-
-        mExampleString = a.getString(
-                R.styleable.ClockView_exampleString);
-        mExampleColor = a.getColor(
-                R.styleable.ClockView_exampleColor,
-                mExampleColor);
-        // Use getDimensionPixelSize or getDimensionPixelOffset when dealing with
-        // values that should fall on pixel boundaries.
-        mExampleDimension = a.getDimension(
-                R.styleable.ClockView_exampleDimension,
-                mExampleDimension);
+        circleText = "N";
+        circleCol = Color.RED;
+        labelCol = Color.BLACK;
 
         if (a.hasValue(R.styleable.ClockView_exampleDrawable)) {
             mExampleDrawable = a.getDrawable(
@@ -62,110 +51,79 @@ public class ClockView extends View {
 
         a.recycle();
 
-        // Set up a default TextPaint object
-        mTextPaint = new TextPaint();
-        mTextPaint.setFlags(Paint.ANTI_ALIAS_FLAG);
-        mTextPaint.setTextAlign(Paint.Align.LEFT);
-
         // Update TextPaint and text measurements from attributes
         invalidateTextPaintAndMeasurements();
     }
 
     private void invalidateTextPaintAndMeasurements() {
-        mTextPaint.setTextSize(mExampleDimension);
-        mTextPaint.setColor(mExampleColor);
-        mTextWidth = mTextPaint.measureText(mExampleString);
+    }
 
-        Paint.FontMetrics fontMetrics = mTextPaint.getFontMetrics();
-        mTextHeight = fontMetrics.bottom;
+    public int getCircleColor(){
+        return circleCol;
+    }
+
+    public int getLabelColor(){
+        return labelCol;
+    }
+
+    public void setLabelColor(int newColor){
+        //update the instance variable
+        labelCol=newColor;
+        //redraw the view
+        invalidate();
+        requestLayout();
+    }
+
+    public void setCircleColor(int newColor){
+        //update the instance variable
+        circleCol=newColor;
+        //redraw the view
+        invalidate();
+        requestLayout();
+    }
+
+    public String getLabelText(){
+        return circleText;
+    }
+
+    public void setLabelText(String newLabel){
+        //update the instance variable
+        circleText=newLabel;
+        //redraw the view
+        invalidate();
+        requestLayout();
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        // TODO: consider storing these as member variables to reduce
-        // allocations per draw cycle.
-        int paddingLeft = getPaddingLeft();
-        int paddingTop = getPaddingTop();
-        int paddingRight = getPaddingRight();
-        int paddingBottom = getPaddingBottom();
+        //get half of the width and height as we are working with a circle
+        int viewWidthHalf = this.getMeasuredWidth()/2;
+        int viewHeightHalf = this.getMeasuredHeight()/2;
+        //get the radius as half of the width or height, whichever is smaller
+        //subtract ten so that it has some space around it
+        int radius = 0;
+        if(viewWidthHalf>viewHeightHalf)
+            radius=viewHeightHalf-10;
+        else
+            radius=viewWidthHalf-10;
 
-        int contentWidth = getWidth() - paddingLeft - paddingRight;
-        int contentHeight = getHeight() - paddingTop - paddingBottom;
+        //set drawing properties
+        circlePaint.setStyle(Paint.Style.FILL);
+        circlePaint.setAntiAlias(true);
+        //set the paint color using the circle color specified
+        circlePaint.setColor(circleCol);
+        //draw the circle using the properties defined
+        canvas.drawCircle(viewWidthHalf, viewHeightHalf, radius, circlePaint);
 
-        // Draw the text.
-        canvas.drawText(mExampleString,
-                paddingLeft + (contentWidth - mTextWidth) / 2,
-                paddingTop + (contentHeight + mTextHeight) / 2,
-                mTextPaint);
-
-        // Draw the example drawable on top of the text.
-        if (mExampleDrawable != null) {
-            mExampleDrawable.setBounds(paddingLeft, paddingTop,
-                    paddingLeft + contentWidth, paddingTop + contentHeight);
-            mExampleDrawable.draw(canvas);
-        }
-    }
-
-    /**
-     * Gets the example string attribute value.
-     *
-     * @return The example string attribute value.
-     */
-    public String getExampleString() {
-        return mExampleString;
-    }
-
-    /**
-     * Sets the view's example string attribute value. In the example view, this string
-     * is the text to draw.
-     *
-     * @param exampleString The example string attribute value to use.
-     */
-    public void setExampleString(String exampleString) {
-        mExampleString = exampleString;
-        invalidateTextPaintAndMeasurements();
-    }
-
-    /**
-     * Gets the example color attribute value.
-     *
-     * @return The example color attribute value.
-     */
-    public int getExampleColor() {
-        return mExampleColor;
-    }
-
-    /**
-     * Sets the view's example color attribute value. In the example view, this color
-     * is the font color.
-     *
-     * @param exampleColor The example color attribute value to use.
-     */
-    public void setExampleColor(int exampleColor) {
-        mExampleColor = exampleColor;
-        invalidateTextPaintAndMeasurements();
-    }
-
-    /**
-     * Gets the example dimension attribute value.
-     *
-     * @return The example dimension attribute value.
-     */
-    public float getExampleDimension() {
-        return mExampleDimension;
-    }
-
-    /**
-     * Sets the view's example dimension attribute value. In the example view, this dimension
-     * is the font size.
-     *
-     * @param exampleDimension The example dimension attribute value to use.
-     */
-    public void setExampleDimension(float exampleDimension) {
-        mExampleDimension = exampleDimension;
-        invalidateTextPaintAndMeasurements();
+        //set the text color using the color specified
+        circlePaint.setColor(labelCol);
+        //set text properties
+        circlePaint.setTextAlign(Paint.Align.CENTER);
+        circlePaint.setTextSize(180);
+        //draw the text using the string attribute and chosen properties
+        canvas.drawText(circleText, viewWidthHalf, viewHeightHalf + 70, circlePaint);
     }
 
     /**

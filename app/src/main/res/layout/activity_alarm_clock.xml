@@ -2,23 +2,17 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#0099cc"
+    android:background="#000000"
     tools:context="com.madebychuck.kidsalarmclock.kidsalarmclock.AlarmClockActivity">
 
     <!-- The primary full-screen view. This can be replaced with whatever view
          is needed to present your content, e.g. VideoView, SurfaceView,
          TextureView, etc. -->
-    <TextView
+    <com.madebychuck.kidsalarmclock.kidsalarmclock.ClockView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:id="@+id/fullscreen_content"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:gravity="center"
-        android:keepScreenOn="true"
-        android:text="@string/dummy_content"
-        android:textColor="#33b5e5"
-        android:textSize="50sp"
-        android:textStyle="bold" />
-
+        android:layout_gravity="center" />
     <!-- This FrameLayout insets its children based on system windows using
          android:fitsSystemWindows. -->
     <FrameLayout
